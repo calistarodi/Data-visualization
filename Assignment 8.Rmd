@@ -1,0 +1,70 @@
+---
+title: "Assignment 8"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r global, include=FALSE}
+#upload libraries
+library(flexdashboard)
+library(shiny)
+library(dplyr)
+library(ggplot2)
+library(ggiraph)
+library(scales)
+library(plotly)
+
+#load in data
+tornados <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-05-16/tornados.csv')
+
+#variable for # of tornados in each state each year
+tornadosByState <- tornados %>%
+  group_by(yr, st) %>%
+  summarise(count = n())
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Number of Injuries each Year
+
+```{r}
+p1 <- tornados %>%
+  group_by(yr) %>%
+  summarize(injuries = sum(inj)) %>%
+  ggplot() +
+  geom_point_interactive(aes(x = yr, y = injuries, tooltip = paste(yr, ": ", injuries, "injuries"))) +
+  labs(x = "Year", y = "Number of Injuries") +
+  theme_minimal()
+
+ggiraph(code = print(p1))
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+Column {.sidebar}
+```{r}
+selectInput('year', 'Select a Year:', sort(unique(tornados$yr)))
+```
+
+### Number of Tornados each Year by State
+
+```{r}
+renderPlotly({
+p <- tornadosByState %>% 
+  filter(yr == input$year) %>%
+  ggplot(aes(x = st, y = count)) +
+  geom_col() +
+  coord_flip() +
+  labs(x = "State", y = "Number of Tornados") +
+  ggtitle(paste("Number of Tornadoes in", input$year)) +
+  theme_minimal()
+ggplotly(p)
+  })
+```
+
+

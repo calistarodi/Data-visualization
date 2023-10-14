@@ -1,0 +1,26 @@
+---
+title: "assignment 2"
+format: docx
+editor: visual
+---
+
+## Spotify data
+
+```{r}
+library(rio)
+d <- import('Spotify_top50.csv')
+```
+
+```{r}
+summary(d)
+```
+
+```{r}
+mean(d$Liveness)
+```
+
+![](Image.jpeg)
+
+The higher ranked songs have a lower liveliness.
+
+The principles I used are decluttering and focusing. The ranked songs are grouped together by 10s, so I don't have a bar for every single song from one to fifty. I also made the bars for 1-10 and 11-20 darker than the 21-50 so the reader knows to focus on these bars. I also made the y axis start at 8 so the data points could be more easily distinguished. The exact average liveliness is written above each bar so it improve readability. I ordered the x-axis in ascending rank order, which is the default of how someone would read it, so it makes the graph easier to follow.

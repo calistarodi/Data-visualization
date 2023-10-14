@@ -1,0 +1,113 @@
+---
+title: "Assignment 3 corrected"
+format: docx
+docx:
+  echo: true
+editor: visual
+---
+
+```{r}
+library(rio)
+library(tidyverse)
+
+# 1: Import the data sheet
+x <- import('USMA_Progression.xlsx')
+```
+
+```{r}
+# 2: Recreate the femalespeers, malespeers, and totpeople columns
+x %>% group_by(year, company_n) %>%
+  mutate(newFemale_peers = sum(female == 1, na.rm = TRUE)) %>%
+  mutate(newMale_peers = sum(female == 0, na.rm = TRUE)) %>%
+  mutate(totalPeople = n()) %>%
+  mutate(newFemale_peers = newFemale_peers - ((newFemale_peers > 0) & (female == 1)), newMale_peers = newMale_peers - ((newMale_peers > 0) & (female == 0)))
+
+#class written correction:
+#x <- x %>% 
+#  group_by(company_n, class, year) %>%
+#  mutate(new_femalepeers = case_when(
+#    female ==1 -sum(female)) - 1,
+#    TRUE = sum(female))
+#OR
+#x <- x %>% 
+#  group_by(company, class, year) %>%
+#  mutate(new_femalepeers = sum(female) - female) %>%
+#  mutate(new_malepeers = sum(1 - female) - (1 - female)) %>%
+#  mutate(new_totalpeers = new_malepeers + new_femalepeers)
+```
+
+3\. The issue might come from the fact that the femalespeers and malespeers columns had the total number of females and males in the cadet's cohort, and it wasn't only counting the peers which is supposed to exclude the individual. This also caused the totpeople column to be off because it was calculating the sum of the female and male peers plus the individual cadet. I trust my recreation more because the newFemale_peers and newMale_peers columns account for the correct amount of peers, which excludes the individual cadet, and the totalPeople column returns the number cadets total in the cohort.
+
+corrections:
+
+```{r}
+x %>% filter(femalespeers != newFemale_peers)
+```
+
+```{r}
+# 4: Create two new columns from company_n
+x$company <- substr(x$company_n, 1, 1)
+x$division <- substr(x$company_n, 3, 3)
+
+#corrections:
+#x <- x %>%
+#  mutate(company = str_sub(company_n, 1, 1),
+#         division = str_sub(company_n, 3, 3))
+#table(x$company)
+#table(x$division)
+#table(nchar(x$company_n)) #to make sure all of the data in company_n are 3 characters
+```
+
+```{r}
+# 5: Limit the data just to years in which all four classes are present in full quantity
+
+#find which year has all four classes without any straggelers
+class_breakdown <- x %>% group_by(year, class) %>% 
+  summarise(n())  #determined to be year 81
+
+#limited data
+limited_x <- x %>% group_by(year, class) %>%
+  filter(year == 81)
+
+
+#corrections:
+#x <- x %>% group_by(year, class) %>%
+#  filter(year == 81)
+```
+
+6\. Make the following tables (note: for a 0/1 or TRUE/FALSE variable like continue_or_grad, a *rate* is the proportion or percentage of people with a 1/TRUE):
+
+```{r}
+#Top four companies with the highest continue_or_grad rates
+x %>% group_by(company) %>% 
+  summarise(continue_or_grad_rate = mean(continue_or_grad, na.rm = TRUE)) %>%
+  arrange(-continue_or_grad_rate) %>%
+  slice(1:4)
+#if there are missing data you have to use na.rm = true
+```
+
+```{r}
+#Continue_or_grad rates by class
+x %>% group_by(class) %>%
+  summarise(continue_or_grad_rate = mean(continue_or_grad == 1))
+```
+
+```{r}
+#Continue_or_grad rates of women by class
+x %>% filter(female == 1) %>%
+  group_by(class) %>%
+  summarise(continue_or_grad_rate_female = mean(continue_or_grad == 1))
+```
+
+7\. Bonus task: Notice anything strange about the "random assignment" of women?
+
+The top companies with the highest continue_or_grad rates for both males and females are D,A,H,B, but the top companies with the highest continue_or_grad rate for women are F,G,E,C. In fact, those top four companies (D,A,H,B) are ranked 5,6,7, and 9 respectively in the continue_or_grad rate for women. This could point to the idea that the women are not randomly assigned to companies. Also because the continue_or_grad rates of women in classes 3 and 4 are in the 90s, while classes 1 and 2 are high 70s to low 80s, this might also suggest the women are not randomly assigned.
+
+```{r}
+# ranked continue_or_grad rates of women by company
+x %>% group_by(company) %>%
+  filter(female == 1) %>%
+  summarize(grad_rate = mean(continue_or_grad == 1)) %>%
+  arrange(-grad_rate)
+
+```

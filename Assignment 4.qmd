@@ -1,0 +1,77 @@
+---
+title: "Assignment 4"
+format:
+  docx:
+    echo: TRUE
+editor: visual
+---
+
+## Assignment 4
+
+#### Question 1
+
+```{r}
+#load the dataset and libraries
+library(rio)
+library(dplyr)
+library(vtable)
+library(ggplot2)
+dat <- import('college_expenses_and_enrollment.Rds') 
+
+```
+
+#### Question 2
+
+```{r}
+#overview of dataset
+vtable(dat, lush = TRUE)
+```
+
+I used the vtable function to get an overview of the dataset and quickly see if there are any interesting relationships between the different variables. I also wanted to see if there were any missing variables, and if/how these would affect my analysis moving forward.
+
+```{r}
+#per-capita variables
+dat$tuitionPerStudent <- (dat$Total.Income / dat$Total.Enrollment)
+```
+
+Because the data for tuition is total tuition revenue, I wanted to be able to see the tuition per student, so I had to calculate it. I was going to use this per-capita figure to do different comparisons.
+
+```{r}
+#bar graph for the number of different types of colleges 
+ggplot(dat, aes(y = type)) + geom_bar()
+```
+
+The vtable showed that there were 6 different types of colleges, so I wanted to see a breakdown of how many there were. I found that Private NP 4-year had the most and Private NP 2-year had the least. Moving forward, I wanted to see the tuition per student for each type, but specifically the Private NP 4-year.
+
+```{r}
+#column plot for the tuition per student by type of college
+dat %>%
+  group_by(type) %>%
+  summarise(tuitionPerStudent = Total.Income / Total.Enrollment, na.rm = TRUE) %>%
+  ggplot(aes(x = tuitionPerStudent, y = type)) + geom_col()
+```
+
+I used this column plot to see that the Private NP 4-year colleges had an exponentially higher tuition cost per student compared to the other colleges. From here, I wanted to see how the income and types of collges were related.
+
+```{r}
+#boxplot of total income by college type
+dat %>%
+  group_by(type) %>%
+  summarize(type)
+  ggplot(dat, aes(y = type, x = Total.Income, na.rm = TRUE)) + geom_boxplot()
+```
+
+The box plot allows us to compare the distribution of income across different types of colleges and universities. This can provide insight into potential differences in financial performance or funding sources between different types of institutions, which is why I want to see the relationship between expenses and income.
+
+```{r}
+#scatterplot of total expenses vs total income
+ggplot(dat, aes(x = Total.Income, y = Total.Expenses)) + geom_point()
+```
+
+The scatterplot shows how total income and total expenses are positively and directly related.
+
+#### Question 3
+
+```{r}
+ggplot(dat, aes(y = type)) + geom_bar() + ggtitle("Number of Colleges by Type") + ylab("College Type") + xlab("Count") + theme_linedraw()
+```
